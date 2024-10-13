@@ -12,6 +12,7 @@ function App() {
   const checkIfCorrectPage = async () => {
     const [tab] = await chrome.tabs.query({ active: true });
 
+    // Checking if the active tab is linkediN or not
     if (tab.url?.startsWith("https://www.linkedin.com")) {
       setCorrectPage(true);
     }
@@ -23,6 +24,7 @@ function App() {
     const tabId = tab.id;
 
     if (tabId) {
+      // Sending message to content script to check status and get data
       chrome.tabs.sendMessage(tabId, { type: "STATUS" }, () => {});
     }
   };
@@ -34,6 +36,7 @@ function App() {
 
     if (tabId) {
       chrome.tabs.sendMessage(tabId, { type: "START" }, (response) => {
+        // Send message to content script to start connecting
         if (response) {
           setConnecting(true);
         }
@@ -48,6 +51,7 @@ function App() {
 
     if (tabId) {
       chrome.tabs.sendMessage(tabId, { type: "STOP" }, (response) => {
+        // Send message to content script to stop connecting
         if (response) {
           setConnecting(false);
         }
@@ -57,8 +61,10 @@ function App() {
 
   const startStopConnecting = async () => {
     if (connecting) {
+      // When `Stop Connecting` button clicked
       stopAutoConnect();
     } else {
+      // When `Start Connecting` button clicked
       startAutoConnect();
     }
   };
@@ -68,8 +74,7 @@ function App() {
 
     checkStatus();
 
-    // Listen for messages from the background script
-
+    // Listen for messages from the content script
     const handleMessage = (message: {
       type: string;
       requested?: number;
@@ -97,6 +102,7 @@ function App() {
     };
   }, []);
 
+  // UI
   return (
     <div
       style={{
