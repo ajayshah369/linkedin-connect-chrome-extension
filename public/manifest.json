@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "LinkedIn Connect",
+    "version": "1.0.0",
+    "action": {
+        "default_popup": "index.html",
+        "default_icon": "icons/icon128.png"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "64": "icons/icon64.png",
+        "96": "icons/icon96.png",
+        "128": "icons/icon128.png",
+        "192": "icons/icon192.png",
+        "256": "icons/icon256.png",
+        "512": "icons/icon512.png"
+    },
+    "permissions": [
+        "tabs",
+        "scripting",
+        "activeTab"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.linkedin.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "host_permissions": [
+        "https://www.linkedin.com/*"
+    ]
+}
