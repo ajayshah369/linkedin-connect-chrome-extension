@@ -16,6 +16,21 @@ function App() {
     }
   };
 
+  const checkStatus = async () => {
+    const [tab] = await chrome.tabs.query({ active: true });
+
+    const tabId = tab.id;
+
+    if (tabId) {
+      chrome.tabs.sendMessage(tabId, { type: "STATUS" }, (response) => {
+        if (response) {
+          setTotalConnections(response.total ?? 1);
+          setRequestedConnectionCount(response.count ?? 0);
+        }
+      });
+    }
+  };
+
   const startAutoConnect = async () => {
     const [tab] = await chrome.tabs.query({ active: true });
 
@@ -55,21 +70,21 @@ function App() {
   useEffect(() => {
     checkIfCorrectPage(false);
 
+    checkStatus();
+
     // Listen for messages from the background script
 
     const handleMessage = (message: {
       type: string;
       count?: number;
-      index?: number;
+      total?: number;
     }) => {
       console.log(message);
       if (message.type === "CONNECTION REQUESTED") {
-        setRequestedConnectionCount((prev) => {
-          console.log(`Index: ${message.index}`);
-          return prev + (message.count ?? 1);
-        });
+        setRequestedConnectionCount(message.count ?? 0);
       } else if (message.type === "TOTAL CONNECTIONS") {
-        setTotalConnections(message.count ?? 1);
+        setTotalConnections(message.total ?? 1);
+        setRequestedConnectionCount(message.count ?? 0);
       } else if (message.type === "CONNECTION REQUEST COMPLETE") {
         setConnecting(false);
         setDisabled(true);

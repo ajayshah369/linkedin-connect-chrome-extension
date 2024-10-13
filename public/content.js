@@ -1,4 +1,6 @@
 let connect = true;
+let total = 10;
+let requested = 0;
 let i = 1;
 
 const returnNewPromise = () => {
@@ -11,7 +13,7 @@ const returnNewPromise = () => {
       } else {
         reject("Operation failed.");
       }
-    }, 500); // Simulates a delay of 2 seconds
+    }, 100); // Simulates a delay of 2 seconds
   });
 
   return myPromise;
@@ -20,19 +22,21 @@ const returnNewPromise = () => {
 async function autoConnect() {
   chrome.runtime.sendMessage({
     type: "TOTAL CONNECTIONS",
-    count: 100,
+    total: total,
+    count: requested,
   });
 
-  for (i = 1; i <= 100; i++) {
+  for (; i <= total; i++) {
     if (!connect) {
       return;
     }
 
     try {
       await returnNewPromise();
+      requested += 1;
       chrome.runtime.sendMessage({
         type: "CONNECTION REQUESTED",
-        count: 1,
+        count: requested,
         index: i,
       });
     } catch (err) {}
@@ -43,14 +47,21 @@ async function autoConnect() {
   });
 }
 
-// Listen for messages from the React app or background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "START") {
-    connect = true;
-    autoConnect();
-    sendResponse(true);
-  } else if (message.type === "STOP") {
-    connect = false;
-    sendResponse(true);
-  }
-});
+window.onload = () => {
+  // Listen for messages from the React app or background script
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "START") {
+      connect = true;
+      autoConnect();
+      sendResponse(true);
+    } else if (message.type === "STOP") {
+      connect = false;
+      sendResponse(true);
+    } else if (message.type === "STATUS") {
+      sendResponse({
+        total,
+        count: requested,
+      });
+    }
+  });
+};
