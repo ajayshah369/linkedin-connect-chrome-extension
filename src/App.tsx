@@ -3,16 +3,17 @@ import CircularProgress from "./components/circularProgress";
 
 function App() {
   const [connecting, setConnecting] = useState<boolean>(false);
+  const [correctPage, setCorrectPage] = useState(false);
   const [disabled, setDisabled] = useState<boolean>(true);
 
   const [requestedConnectionCount, setRequestedConnectionCount] = useState(0);
   const [totalConnections, setTotalConnections] = useState(1);
 
-  const checkIfCorrectPage = async (disable: boolean) => {
+  const checkIfCorrectPage = async () => {
     const [tab] = await chrome.tabs.query({ active: true });
 
     if (tab.url?.startsWith("https://www.linkedin.com")) {
-      setDisabled(disable);
+      setCorrectPage(true);
     }
   };
 
@@ -22,12 +23,7 @@ function App() {
     const tabId = tab.id;
 
     if (tabId) {
-      chrome.tabs.sendMessage(tabId, { type: "STATUS" }, (response) => {
-        if (response) {
-          setTotalConnections(response.total ?? 1);
-          setRequestedConnectionCount(response.count ?? 0);
-        }
-      });
+      chrome.tabs.sendMessage(tabId, { type: "STATUS" }, () => {});
     }
   };
 
@@ -68,7 +64,7 @@ function App() {
   };
 
   useEffect(() => {
-    checkIfCorrectPage(false);
+    checkIfCorrectPage();
 
     checkStatus();
 
@@ -76,18 +72,20 @@ function App() {
 
     const handleMessage = (message: {
       type: string;
-      count?: number;
+      requested?: number;
       total?: number;
+      enable?: boolean;
     }) => {
       console.log(message);
       if (message.type === "CONNECTION REQUESTED") {
-        setRequestedConnectionCount(message.count ?? 0);
-      } else if (message.type === "TOTAL CONNECTIONS") {
-        setTotalConnections(message.total ?? 1);
-        setRequestedConnectionCount(message.count ?? 0);
+        setRequestedConnectionCount(message.requested ?? 0);
       } else if (message.type === "CONNECTION REQUEST COMPLETE") {
         setConnecting(false);
         setDisabled(true);
+      } else if (message.type === "ENABLE BUTTON") {
+        setDisabled(!message.enable);
+        setTotalConnections(message.total ?? 0);
+        setRequestedConnectionCount(message.requested ?? 0);
       }
     };
 
@@ -122,7 +120,7 @@ function App() {
           onClick={() => {
             startStopConnecting();
           }}
-          disabled={disabled}
+          disabled={!correctPage || disabled}
         >
           {connecting ? "Stop" : "Start"} Connecting
         </button>

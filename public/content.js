@@ -1,45 +1,94 @@
 let connect = true;
-let total = 10;
 let requested = 0;
-let i = 1;
+let buttons = [];
+let i = 0;
 
-const returnNewPromise = () => {
-  const myPromise = new Promise((resolve, reject) => {
-    // Simulating an asynchronous operation, e.g., a network request
-    setTimeout(() => {
-      const success = true; // Change to false to simulate failure
-      if (success) {
-        resolve("Operation successful!");
-      } else {
-        reject("Operation failed.");
+const getAllConnections = () => {
+  const allButtons = document.querySelectorAll(
+    "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view"
+  );
+
+  buttons = [];
+  requested = 0;
+  i = 0;
+
+  allButtons.forEach((e) => {
+    const text = e.textContent.trim();
+    if (text === "Connect" || text === "Pending") {
+      buttons.push(e);
+
+      if (text === "Pending") {
+        requested += 1;
       }
-    }, 100); // Simulates a delay of 2 seconds
+    }
+  });
+
+  chrome.runtime.sendMessage({
+    type: "ENABLE BUTTON",
+    enable: requested != buttons.length,
+    requested,
+    total: buttons.length,
+  });
+};
+
+const promise = (time = 500) => {
+  const myPromise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve("Operation successful!");
+    }, time);
   });
 
   return myPromise;
 };
 
-async function autoConnect() {
-  chrome.runtime.sendMessage({
-    type: "TOTAL CONNECTIONS",
-    total: total,
-    count: requested,
-  });
+const makeRequest = async (e) => {
+  if (e?.textContent?.trim() !== "Connect") {
+    return;
+  }
 
-  for (; i <= total; i++) {
+  await promise(1000);
+
+  e?.click();
+
+  await promise();
+
+  const sendWithoutANoteButton = document.querySelector(
+    "button.artdeco-button.artdeco-button--2.artdeco-button--primary.ember-view.ml1"
+  );
+
+  if (
+    sendWithoutANoteButton &&
+    sendWithoutANoteButton.textContent.trim() === "Send without a note"
+  ) {
+    sendWithoutANoteButton?.click();
+    requested += 1;
+    chrome.runtime.sendMessage({
+      type: "CONNECTION REQUESTED",
+      requested,
+    });
+  }
+
+  await promise();
+
+  const cancelWithdrawButton = document.querySelector(
+    "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view.artdeco-modal__confirm-dialog-btn"
+  );
+
+  if (
+    cancelWithdrawButton &&
+    cancelWithdrawButton.textContent.trim() === "Cancel"
+  ) {
+    cancelWithdrawButton?.click();
+  }
+};
+
+async function autoConnect() {
+  for (; i <= buttons.length; i++) {
     if (!connect) {
       return;
     }
 
-    try {
-      await returnNewPromise();
-      requested += 1;
-      chrome.runtime.sendMessage({
-        type: "CONNECTION REQUESTED",
-        count: requested,
-        index: i,
-      });
-    } catch (err) {}
+    await makeRequest(buttons[i]);
   }
 
   chrome.runtime.sendMessage({
@@ -58,10 +107,8 @@ window.onload = () => {
       connect = false;
       sendResponse(true);
     } else if (message.type === "STATUS") {
-      sendResponse({
-        total,
-        count: requested,
-      });
+      getAllConnections();
+      sendResponse(true);
     }
   });
 };
