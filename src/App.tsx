@@ -108,6 +108,7 @@ function App() {
       </div>
 
       <div className='p-4 flex flex-col items-center justify-center gap-4'>
+        <p className='text-lg'>Invitation Sent</p>
         <CircularProgress
           count={requestedConnectionCount}
           total={totalConnections}
