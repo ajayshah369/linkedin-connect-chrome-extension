@@ -71,16 +71,16 @@ const makeRequest = async (e) => {
   ) {
     // If `Send without a note` exists click it
     sendWithoutANoteButton?.click();
-
-    // Increase the number of requested connection by 1
-    requested += 1;
-
-    // Send message to popup to update the circular progress bar
-    chrome.runtime.sendMessage({
-      type: "CONNECTION REQUESTED",
-      requested,
-    });
   }
+
+  // Increase the number of requested connection by 1
+  requested += 1;
+
+  // Send message to popup to update the circular progress bar
+  chrome.runtime.sendMessage({
+    type: "CONNECTION REQUESTED",
+    requested,
+  });
 
   await promise();
 
