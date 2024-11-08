@@ -120,6 +120,10 @@ function App() {
           total={totalConnections}
         />
 
+        <p className='font-medium text-white uppercase'>
+          Total Connections: {totalConnections}
+        </p>
+
         <button
           className={`border-none outline-none rounded px-6 py-2 ${
             connecting ? "bg-red-800" : "bg-green-800"

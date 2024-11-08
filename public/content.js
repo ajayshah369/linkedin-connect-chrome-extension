@@ -5,14 +5,11 @@ let i = 0; // Index of loop
 
 const getAllConnections = () => {
   // Get All buttons on page
-  const allButtons = document.querySelectorAll(
-    "button.artdeco-button.artdeco-button--2.artdeco-button--secondary.ember-view"
-  );
+  const allButtons = document.querySelectorAll("button");
 
   // Resetting the values
   buttons = [];
   requested = 0;
-  i = 0;
 
   // Filter out buttons with text `Content` and `Pending`
   allButtons.forEach((e) => {
